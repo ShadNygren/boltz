@@ -1,0 +1,49 @@
+# Version control
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.pytest_cache
+.coverage
+htmlcov
+
+# Virtual environments
+venv
+env
+.env
+.venv
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation build
+docs/_build
+
+# Local development
+*.log
+.cache
+
+# Temporary files
+tmp
+temp
+
+# Model cache (will be created fresh in container)
+.boltz
+
+# Docker
+Dockerfile*
+.dockerignore
