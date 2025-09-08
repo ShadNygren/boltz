@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  boltz:
+    build: .
+    image: boltz:latest
+    container_name: boltz-container
+    
+    # GPU support - requires nvidia-docker2
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    
+    # Mount volumes for input/output
+    volumes:
+      - ./data:/app/data:rw          # Input data directory
+      - ./results:/app/results:rw   # Output results directory
+      - boltz_cache:/root/.boltz:rw # Persistent model cache
+    
+    # Environment variables
+    environment:
+      - BOLTZ_CACHE=/root/.boltz
+      - CUDA_VISIBLE_DEVICES=all
+    
+    # Override default command for interactive use
+    # command: boltz predict /app/data/input.yaml --use_msa_server --out_dir /app/results
+    
+    # For interactive debugging
+    # command: /bin/bash
+    # stdin_open: true
+    # tty: true
+
+volumes:
+  boltz_cache:
+    driver: local
