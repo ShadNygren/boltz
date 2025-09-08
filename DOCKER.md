@@ -22,19 +22,80 @@ sudo apt-get update && sudo apt-get install -y nvidia-docker2
 sudo systemctl restart docker
 ```
 
-## Quick Start
+## Flexible Dockerfile with Build Args
 
-### 1. Build the Docker Image
+The Dockerfile supports multiple PyTorch and CUDA versions through build arguments:
+
+### Build Arguments
+- **`PYTORCH_VERSION`** (default: `2.2.0`) - PyTorch version
+- **`CUDA_VERSION`** (default: `12.1`) - CUDA version  
+- **`CUDNN_VERSION`** (default: `8`) - cuDNN version
+- **`BASE_IMAGE_VARIANT`** (default: `runtime`) - Use `runtime` or `devel`
+
+### Current Build Matrix
+
+Our GitHub Actions automatically builds multiple variants:
+
+| Variant | Base Image | Image Tag Suffix |
+|---------|------------|------------------|
+| **Stable CUDA 12.1** | `pytorch/pytorch:2.2.0-cuda12.1-cudnn8-runtime` | `-cuda12.1` |
+| **Stable CUDA 11.8** | `pytorch/pytorch:2.2.0-cuda11.8-cudnn8-runtime` | `-cuda11.8` |  
+| **Latest CUDA 12.9** | `pytorch/pytorch:2.8.0-cuda12.9-cudnn9-runtime` | `-cuda12.9` |
+
+### Generated Image Tags
+
+Images are automatically published to GitHub Container Registry:
 
 ```bash
-# Build the image
+# Stable variants (tested)
+ghcr.io/shadnygren/boltz:latest-cuda12.1
+ghcr.io/shadnygren/boltz:latest-cuda11.8
+
+# Latest variant (experimental)  
+ghcr.io/shadnygren/boltz:latest-cuda12.9
+
+# Branch-specific tags
+ghcr.io/shadnygren/boltz:docker-pytorch-<sha>-cuda12.1
+ghcr.io/shadnygren/boltz:docker-pytorch-<sha>-cuda11.8
+ghcr.io/shadnygren/boltz:docker-pytorch-<sha>-cuda12.9
+```
+
+## Quick Start
+
+### 1. Build Custom Docker Image
+
+```bash
+# Build with default settings (CUDA 12.1)
 docker build -t boltz:latest .
+
+# Build with custom PyTorch/CUDA version
+docker build --build-arg PYTORCH_VERSION=2.8.0 \
+             --build-arg CUDA_VERSION=12.9 \
+             --build-arg CUDNN_VERSION=9 \
+             -t boltz:cuda12.9 .
+
+# Build development variant with extra tools
+docker build --build-arg BASE_IMAGE_VARIANT=devel \
+             -t boltz:devel .
 
 # Or using docker-compose
 docker-compose build
 ```
 
-### 2. Prepare Input Data
+### 2. Use Pre-built Images
+
+```bash
+# Pull stable CUDA 12.1 image
+docker pull ghcr.io/shadnygren/boltz:latest-cuda12.1
+
+# Pull experimental CUDA 12.9 image  
+docker pull ghcr.io/shadnygren/boltz:latest-cuda12.9
+
+# Pull CUDA 11.8 for older hardware
+docker pull ghcr.io/shadnygren/boltz:latest-cuda11.8
+```
+
+### 3. Prepare Input Data
 
 ```bash
 # Create directories
@@ -44,7 +105,7 @@ mkdir -p data results
 cp your_input.yaml data/
 ```
 
-### 3. Run Predictions
+### 4. Run Predictions
 
 #### Using Docker Compose (Recommended)
 ```bash
