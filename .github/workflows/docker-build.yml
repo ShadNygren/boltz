@@ -31,6 +31,20 @@ jobs:
     permissions:
       contents: read
       packages: write
+    
+    strategy:
+      matrix:
+        include:
+          - pytorch_version: "2.2.0"
+            cuda_version: "12.1"
+            cudnn_version: "8"
+            base_image_variant: "runtime"
+            image_suffix: "cuda12.1"
+          - pytorch_version: "2.2.0"
+            cuda_version: "11.8"
+            cudnn_version: "8"
+            base_image_variant: "runtime"
+            image_suffix: "cuda11.8"
 
     steps:
     - name: Checkout repository
@@ -71,6 +85,8 @@ jobs:
       uses: docker/metadata-action@v5
       with:
         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        flavor: |
+          suffix=-${{ matrix.image_suffix }}
         tags: |
           type=ref,event=branch
           type=ref,event=pr
@@ -85,14 +101,33 @@ jobs:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        build-args: |
+          PYTORCH_VERSION=${{ matrix.pytorch_version }}
+          CUDA_VERSION=${{ matrix.cuda_version }}
+          CUDNN_VERSION=${{ matrix.cudnn_version }}
+          BASE_IMAGE_VARIANT=${{ matrix.base_image_variant }}
+        cache-from: type=gha,scope=${{ matrix.image_suffix }}
+        cache-to: type=gha,mode=max,scope=${{ matrix.image_suffix }}
         platforms: linux/amd64
 
   security-scan:
     needs: build-and-test
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request'
+    
+    strategy:
+      matrix:
+        include:
+          - pytorch_version: "2.2.0"
+            cuda_version: "12.1"
+            cudnn_version: "8"
+            base_image_variant: "runtime"
+            image_suffix: "cuda12.1"
+          - pytorch_version: "2.2.0"
+            cuda_version: "11.8"
+            cudnn_version: "8"
+            base_image_variant: "runtime"
+            image_suffix: "cuda11.8"
     
     steps:
     - name: Checkout repository
@@ -103,6 +138,8 @@ jobs:
       uses: docker/metadata-action@v5
       with:
         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        flavor: |
+          suffix=-${{ matrix.image_suffix }}
         tags: |
           type=ref,event=branch
           type=ref,event=pr
@@ -114,9 +151,9 @@ jobs:
       with:
         image-ref: '${{ fromJSON(steps.meta.outputs.json).tags[0] }}'
         format: 'sarif'
-        output: 'trivy-results.sarif'
+        output: 'trivy-results-${{ matrix.image_suffix }}.sarif'
 
     - name: Upload Trivy scan results
       uses: github/codeql-action/upload-sarif@v3
       with:
-        sarif_file: 'trivy-results.sarif'
+        sarif_file: 'trivy-results-${{ matrix.image_suffix }}.sarif'

@@ -1,5 +1,11 @@
-# Use PyTorch 2.2.0 with CUDA 12.1 runtime as base image
-FROM pytorch/pytorch:2.2.0-cuda12.1-cudnn8-runtime
+# Build arguments for flexible PyTorch base image selection
+ARG PYTORCH_VERSION=2.2.0
+ARG CUDA_VERSION=12.1
+ARG CUDNN_VERSION=8
+ARG BASE_IMAGE_VARIANT=runtime
+
+# Use PyTorch with configurable CUDA version as base image
+FROM pytorch/pytorch:${PYTORCH_VERSION}-cuda${CUDA_VERSION}-cudnn${CUDNN_VERSION}-${BASE_IMAGE_VARIANT}
 
 # Set working directory
 WORKDIR /app
