@@ -141,10 +141,29 @@ boltz_results_<input>/
 - Type hints required (pyproject.toml enforces this)
 - No comments unless explicitly needed (specified in CLAUDE instructions)
 
+### Docker Support
+- **Dockerfile**: PyTorch 2.2.0 + CUDA 12.1 base image
+- **docker-compose.yml**: GPU support with persistent volumes
+- **DOCKER.md**: Comprehensive Docker usage guide
+- **build_docker.sh**: Build and test script
+
+### Docker Commands
+```bash
+# Build image
+docker build -t boltz:latest .
+
+# Run prediction with GPU
+docker-compose run --rm boltz boltz predict /app/data/input.yaml --use_msa_server --out_dir /app/results
+
+# Interactive debugging
+docker-compose run --rm boltz /bin/bash
+```
+
 ### Special Considerations
 - Model weights downloaded automatically to `~/.boltz` (configurable via `BOLTZ_CACHE`)
 - MSA server authentication via environment variables or CLI flags
 - Multi-GPU training supported via PyTorch Lightning DDP
 - Supports both structure and affinity prediction in single workflow
+- Docker setup optimized for CUDA 12.1 compatibility
 ## GPG Signing Test
 This commit should be verified with GPG signing.
